@@ -7,6 +7,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'information-retrieval-app/**'
   workflow_dispatch:
 
 jobs:
@@ -15,6 +17,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        path: information-retrieval-app
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
@@ -23,14 +27,15 @@ jobs:
       uses: docker/login-action@v2
       with:
         registry: https://tonylukeregistry.azurecr.io/
-        username: ${{ secrets.AzureAppService_ContainerUsername_42dce66f0006478ebbbf328a16da2d60 }}
-        password: ${{ secrets.AzureAppService_ContainerPassword_6db5fed832cc42d3ae7905d032d16aa4 }}
+        username: ${{ secrets.AzureAppService_ContainerUsername_f6c7cc5b33de47909317372aa3d89a27 }}
+        password: ${{ secrets.AzureAppService_ContainerPassword_4d8a7433b68d4276a9e6474b128b7893 }}
 
     - name: Build and push container image to registry
       uses: docker/build-push-action@v3
       with:
+        context: '{{defaultContext}}:information-retrieval-app'
         push: true
-        tags: tonylukeregistry.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_42dce66f0006478ebbbf328a16da2d60 }}/information-retrieval/ui:${{ github.sha }}
+        tags: tonylukeregistry.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_f6c7cc5b33de47909317372aa3d89a27 }}/information-retrieval/app:${{ github.sha }}
         file: ./Dockerfile
 
   deploy:
@@ -47,5 +52,5 @@ jobs:
       with:
         app-name: 'app-informationretrieval-prod'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_1f0a7e54b5b04b1ebd23a6b6d35355e9 }}
-        images: 'tonylukeregistry.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_42dce66f0006478ebbbf328a16da2d60 }}/information-retrieval/ui:${{ github.sha }}'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_e8c052e24ef145048481778e46dd9733 }}
+        images: 'tonylukeregistry.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_f6c7cc5b33de47909317372aa3d89a27 }}/information-retrieval/app:${{ github.sha }}'

@@ -7,6 +7,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'information-retrieval-api/**'
   workflow_dispatch:
 
 jobs:
@@ -15,6 +17,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        path: information-retrieval-api
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
@@ -23,14 +27,15 @@ jobs:
       uses: docker/login-action@v2
       with:
         registry: https://tonylukeregistry.azurecr.io/
-        username: ${{ secrets.AzureAppService_ContainerUsername_b6da77c391a442908bb0c3f702ea3207 }}
-        password: ${{ secrets.AzureAppService_ContainerPassword_59b12f364411468d901b4a9135bd016e }}
+        username: ${{ secrets.AzureAppService_ContainerUsername_7605d33b69fc41b8ba2327ccab9de8e1 }}
+        password: ${{ secrets.AzureAppService_ContainerPassword_a4f015d6a71d4393b9f0fdb5e5714d89 }}
 
     - name: Build and push container image to registry
       uses: docker/build-push-action@v3
       with:
+        context: '{{defaultContext}}:information-retrieval-api'
         push: true
-        tags: tonylukeregistry.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_b6da77c391a442908bb0c3f702ea3207 }}/information-retrieval/api:${{ github.sha }}
+        tags: tonylukeregistry.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_7605d33b69fc41b8ba2327ccab9de8e1 }}/information-retrieval/api:${{ github.sha }}
         file: ./Dockerfile
 
   deploy:
@@ -47,5 +52,5 @@ jobs:
       with:
         app-name: 'api-informationretrieval-prod'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_7ec001f4c22942668f7e857691b962f9 }}
-        images: 'tonylukeregistry.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_b6da77c391a442908bb0c3f702ea3207 }}/information-retrieval/api:${{ github.sha }}'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_22bc259940a24c958666d298f57b5379 }}
+        images: 'tonylukeregistry.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_7605d33b69fc41b8ba2327ccab9de8e1 }}/information-retrieval/api:${{ github.sha }}'
