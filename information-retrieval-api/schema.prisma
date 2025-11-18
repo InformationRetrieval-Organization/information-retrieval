@@ -15,10 +15,10 @@ model Post {
   content      String?
   published_on DateTime @default(now())
   link         String?
-  source       String? 
+  source       String?
 }
 
 model Processed_Post {
-  id           Int      @id 
-  content      String?
+  id      Int     @id
+  content String?
 }
