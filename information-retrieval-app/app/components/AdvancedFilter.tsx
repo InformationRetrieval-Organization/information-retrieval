@@ -44,7 +44,7 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ filters, setFilters }) 
                             aria-label="Operator"
                         >
                             {operators.map((operator) => (
-                                <SelectItem key={operator} value={operator}>
+                                <SelectItem key={operator}>
                                     {operator}
                                 </SelectItem>
                             ))}
