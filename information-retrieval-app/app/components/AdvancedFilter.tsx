@@ -1,4 +1,4 @@
-import { Button, Accordion, AccordionItem, Select, SelectItem, Input } from "@nextui-org/react";
+import { Button, Accordion, AccordionItem, Select, SelectItem, Input } from "@heroui/react";
 import { MinusIcon, PlusIcon } from "@/components/icons";
 
 interface AdvancedFilterProps {

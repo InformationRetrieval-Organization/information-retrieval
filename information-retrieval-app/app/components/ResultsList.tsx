@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardHeader, CardBody, Link, Pagination } from "@nextui-org/react";
+import { Card, CardHeader, CardBody, Link, Pagination } from "@heroui/react";
 
 function truncateContent(content: string, wordLimit: number) {
     const words = content.split(' ');
