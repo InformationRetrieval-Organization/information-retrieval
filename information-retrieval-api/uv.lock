@@ -334,7 +334,7 @@ wheels = [
 [[package]]
 name = "information-retrieval-api"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "aiocache" },
     { name = "bs4" },
