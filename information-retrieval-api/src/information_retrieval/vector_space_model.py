@@ -1,5 +1,7 @@
 import logging
+import asyncio
 import math
+from collections import Counter
 from typing import Any, List
 from db.processed_posts import get_all_processed_posts
 import information_retrieval.globals
@@ -30,7 +32,14 @@ async def search_vector_space_model(query: List[str]) -> List[int]:
         return []
 
     # creating the tfidf-query vector
-    tfidf_vector = [compute_tf_idf_weighting(compute_sublinear_tf_scaling(query.count(term)), inverse_document_frequency[term]) for term in information_retrieval.globals._vocabulary]
+    query_term_counts = Counter(query)
+    tfidf_vector = [
+        compute_tf_idf_weighting(
+            compute_sublinear_tf_scaling(query_term_counts.get(term, 0)),
+            inverse_document_frequency[term],
+        )
+        for term in information_retrieval.globals._vocabulary
+    ]
 
     flat_transposed_query_vector = calculate_dimension_reduced_query(tfidf_vector)
 
@@ -74,23 +83,43 @@ async def build_vector_space_model():
     posts = await get_all_processed_posts()
     posts = [(post.id, post.content) for post in posts]
 
-    # Calculate the document frequency (DF) for each term
+    # Calculate the document frequency (DF) for each term from posts directly
+    # so this builder does not depend on the boolean index being pre-built.
     total_documents = len(posts)
+    vocabulary_set = set(vocabulary)
+    document_frequency = {term: 0 for term in vocabulary}
+
+    for _, content in posts:
+        for term in set(content.split()):
+            if term in vocabulary_set:
+                document_frequency[term] += 1
+
     inverse_document_frequency = {}
 
     for term in vocabulary:
-        # Calculate the df it is the length of the linked list of occurance documents for a particular term
-        df : int = information_retrieval.globals._inverted_index[term].length()
+        # Calculate the DF based on unique terms per document.
+        df: int = document_frequency.get(term, 0)
         # Calculate the inverse document frequency (IDF) for each term
-        inverse_document_frequency[term] = compute_inverse_document_frequency(total_documents, df)
+        inverse_document_frequency[term] = compute_inverse_document_frequency(total_documents, df) if df > 0 else 0.0
 
-    for post in posts:
-        # Every post has its own vector these are created below and added in the corresponding maps
-        tfidf_vector = [compute_tf_idf_weighting(compute_sublinear_tf_scaling(post[1].count(term)), inverse_document_frequency[term]) for term in vocabulary]
+    vector_results = await asyncio.gather(
+        *(
+            asyncio.to_thread(
+                _build_tfidf_vector_for_post,
+                post_id,
+                content,
+                vocabulary,
+                inverse_document_frequency,
+            )
+            for post_id, content in posts
+        )
+    )
+
+    for post_id, tfidf_vector in vector_results:
         # Matrix dimension is term x documents
         # matrix has now the dimension (524, 6643) => dokument to word if i want the word to ducment matrix i have to transpose the matrix
         information_retrieval.globals._document_term_weight_matrix.append(tfidf_vector)
-        information_retrieval.globals._document_id_vector_map[post[0]] = tfidf_vector 
+        information_retrieval.globals._document_id_vector_map[post_id] = tfidf_vector 
     
     
     logger.info("Vector Space Model Built")
@@ -174,3 +203,20 @@ async def execute_singualar_value_decomposition():
         information_retrieval.globals._document_svd_matrix[doc_id] = vector 
         i += 1
     logger.info("SVD executed")
+
+
+def _build_tfidf_vector_for_post(
+    post_id: int,
+    content: str,
+    vocabulary: List[str],
+    inverse_document_frequency: dict,
+):
+    term_counts = Counter(content.split())
+    tfidf_vector = [
+        compute_tf_idf_weighting(
+            compute_sublinear_tf_scaling(term_counts.get(term, 0)),
+            inverse_document_frequency[term],
+        )
+        for term in vocabulary
+    ]
+    return post_id, tfidf_vector

@@ -33,6 +33,13 @@ Database tables are created automatically on API startup.
 uv run uvicorn main:app --app-dir src --host 0.0.0.0 --port 3100
 ```
 
+### Startup behavior
+- The API does not run preprocessing during startup.
+- The API uses existing database content as the source of truth.
+
+### Build preprocessing data manually (Notebook)
+- Use [information-retrieval-api/notebooks/preprocess_and_build_models.ipynb](information-retrieval-api/notebooks/preprocess_and_build_models.ipynb) to prepare data and build models before deployment.
+
 ### optional: pgadmin
 Open `http://localhost:5050/`
 1) Email: root@root.com

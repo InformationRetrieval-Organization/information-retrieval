@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from information_retrieval.vector_space_model import build_vector_space_model, execute_singualar_value_decomposition
@@ -31,11 +32,13 @@ async def lifespan(app: FastAPI):
 
     await init_db_schema()
     await init_database()
-
     init_globals()
-    await preprocess_documents()
-    await build_boolean_model()
-    await build_vector_space_model()
+    logger.info("Skipping preprocessing at startup. Run the local notebook pipeline before starting the API.")
+
+    await asyncio.gather(
+        build_boolean_model(),
+        build_vector_space_model(),
+    )
     await execute_singualar_value_decomposition()
 
     yield

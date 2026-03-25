@@ -1,5 +1,6 @@
 import logging
-from sklearn.feature_extraction.text import TfidfVectorizer
+import asyncio
+from collections import Counter
 from db.processed_posts import get_all_processed_posts 
 from information_retrieval.linked_list import LinkedList
 import information_retrieval.globals 
@@ -21,17 +22,26 @@ async def build_boolean_model():
     posts = await get_all_processed_posts()
     posts = [(post.id, post.content) for post in posts]
 
-    # Create the Postinglists and map the term frequency
-    for post in posts:
-        words = post[1].split() # Split the content into words
-        information_retrieval.globals._all_doc_ids.add(post[0]) # Add the document id to the set of all document ids
-        for word in words: 
-            if word in information_retrieval.globals._inverted_index: 
-                information_retrieval.globals._inverted_index[word].insertSorted(post[0]) 
-                information_retrieval.globals._term_frequency[word] += 1
+    # Build per-document token stats in parallel, then merge into globals.
+    # This avoids repeated insert checks for duplicate words inside a document.
+    tokenized_posts = await asyncio.gather(
+        *(asyncio.to_thread(_tokenize_post, post_id, content) for post_id, content in posts)
+    )
+
+    for post_id, term_counts, unique_terms in tokenized_posts:
+        information_retrieval.globals._all_doc_ids.add(post_id)
+
+        for word, count in term_counts.items():
+            information_retrieval.globals._term_frequency[word] = (
+                information_retrieval.globals._term_frequency.get(word, 0) + count
+            )
+
+        for word in unique_terms:
+            posting_list = information_retrieval.globals._inverted_index.get(word)
+            if posting_list is None:
+                information_retrieval.globals._inverted_index[word] = LinkedList(post_id)
             else:
-                information_retrieval.globals._inverted_index[word] = LinkedList(post[0])
-                information_retrieval.globals._term_frequency[word] = 1
+                posting_list.insertSorted(post_id)
     
     # Create a DataFrame to store the search results
     create_csv()
@@ -98,3 +108,10 @@ def create_csv():
 def delete_old_csv():
     if os.path.exists(INVERTED_INDEX_FILE_PATH):
         os.remove(INVERTED_INDEX_FILE_PATH)
+
+
+def _tokenize_post(post_id: int, content: str):
+    words = content.split()
+    term_counts = Counter(words)
+    unique_terms = set(term_counts.keys())
+    return post_id, term_counts, unique_terms
