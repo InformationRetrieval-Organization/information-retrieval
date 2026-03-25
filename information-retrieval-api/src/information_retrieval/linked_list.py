@@ -1,3 +1,9 @@
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+
 class Node:
     def __init__(self, data):
         self.data = data
@@ -73,10 +79,11 @@ class LinkedList:
 
     def display(self):
         current = self.head
+        values = []
         while current:
-            print(current.data, end=" ")
+            values.append(str(current.data))
             current = current.next
-        print()
+        logger.info("%s", " ".join(values))
         
     def length(self):
         count = 0

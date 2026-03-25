@@ -24,9 +24,9 @@ uv sync
 ## Database 
 ```bash
 docker compose -f compose.yml up -d
-uv run python -m prisma db push
-uv run python -m prisma generate
 ```
+
+Database tables are created automatically on API startup.
 
 ### Run application
 ```bash

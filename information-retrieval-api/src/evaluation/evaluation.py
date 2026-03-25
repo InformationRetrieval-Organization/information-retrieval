@@ -1,3 +1,4 @@
+import logging
 from typing import List
 from matplotlib.ticker import MaxNLocator
 import requests
@@ -7,7 +8,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from datetime import datetime, timedelta
 from datetime import datetime, timedelta
-from prisma import models
 import os
 import sys
 
@@ -21,6 +21,8 @@ from config import (
     EVAL_TEMP_RELEVANCE_IMAGE_PATH,
     EVAL_MEASURES_CSV_PATH,
 )
+
+logger = logging.getLogger(__name__)
 
 base_url = "http://127.0.0.1:8000"
 boolean_api_url = f"{base_url}/search/boolean"
@@ -77,7 +79,7 @@ def evaluate_search_model(relevant_docs: List[int], retrieved_docs: List[int]) -
     return recall, precision, f1
 
 
-def call_boolean_api(query) -> List[models.Post]:
+def call_boolean_api(query) -> List[dict]:
     """
     Call Boolean API
     TODO: whats with OR and NOT operators?
@@ -91,7 +93,7 @@ def call_boolean_api(query) -> List[models.Post]:
     return response.json()
 
 
-def call_vector_space_api(query: str) -> List[models.Post]:
+def call_vector_space_api(query: str) -> List[dict]:
     """
     Call Vector Space API
     """
@@ -104,7 +106,7 @@ def call_vector_space_api(query: str) -> List[models.Post]:
 
 
 def calculate_temporal_relevance(
-    retrieved_docs: List[models.Post], start_date: datetime, end_date: datetime
+    retrieved_docs: List[dict], start_date: datetime, end_date: datetime
 ) -> dict:
     """
     Calculate temporal relevance.
@@ -248,16 +250,16 @@ if __name__ == "__main__":
     """
     Evaluate Boolean and Vector Space Models
     """
-    print("Evaluating Boolean and Vector Space Models")
-    print("===========================================")
+    logger.info("Evaluating Boolean and Vector Space Models")
+    logger.info("===========================================")
 
     ground_truth_df = pd.read_csv(GROUND_DATASET_FILE_PATH)
 
     results = []
 
     for query in range(0,len(vector_queries)):
-        print(f"Query: {boolean_queries[query]}")
-        print(f"Query: {vector_queries[query]}")
+        logger.info("Query: %s", boolean_queries[query])
+        logger.info("Query: %s", vector_queries[query])
 
         # Get relevant documents from ground truth
         relevant_docs = get_relevant_docs(vector_queries[query], ground_truth_df)
@@ -309,7 +311,7 @@ if __name__ == "__main__":
         )
 
     df = pd.DataFrame(results)
-    print(df)
+    logger.info("\n%s", df)
     df.describe().to_csv(EVAL_MEASURES_CSV_PATH)
 
     plot_evaluation_results(df)

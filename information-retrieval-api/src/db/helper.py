@@ -1,3 +1,4 @@
+import logging
 import pandas as pd
 from db.posts import create_many_posts, delete_all_posts, get_all_posts
 from db.processed_posts import delete_all_processed_posts
@@ -5,6 +6,8 @@ import os
 from dateutil.parser import parse
 import glob
 from config import GNEWS_FILE_PATH, GUARDIAN_FILE_PATH
+
+logger = logging.getLogger(__name__)
 
 
 async def init_database():
@@ -15,7 +18,7 @@ async def init_database():
     # Get all posts from the database
     posts = await get_all_posts()
 
-    print(f"Initial length of posts in database: {len(posts)}")
+    logger.info("Initial length of posts in database: %s", len(posts))
 
     # If there are no posts in the database, delete and insert posts
     if not posts:
@@ -28,7 +31,7 @@ async def insert_file_posts():
     """
     Insert articles from files into the database
     """
-    print("Inserting articles from files into the database")
+    logger.info("Inserting articles from files into the database")
 
     csv_files = [GNEWS_FILE_PATH, GUARDIAN_FILE_PATH]
 
@@ -61,9 +64,9 @@ async def insert_file_posts():
                 }
             )
 
-        print(f"Read {len(all_posts)} articles from {file_path}")
+        logger.info("Read %s articles from %s", len(all_posts), file_path)
 
     # Insert all posts into the database at once
     await create_many_posts(all_posts)
 
-    print(f"Inserted {len(all_posts)} articles into the database")
+    logger.info("Inserted %s articles into the database", len(all_posts))

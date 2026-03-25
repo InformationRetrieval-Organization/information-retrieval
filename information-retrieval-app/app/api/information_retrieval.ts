@@ -5,6 +5,10 @@ export async function getVectorSpaceArticles(url: string): Promise<ArticleResult
     try {
         const response = await fetch(`${baseUrl}${url}`);
 
+        if (!response.ok) {
+            throw new Error(`Vector space request failed with status ${response.status}`);
+        }
+
         const data = await response.json();
         const articles: ArticleResult[] = data as ArticleResult[];
 
@@ -24,6 +28,10 @@ export async function getBooleanArticles(url: string, filters: Filter[]): Promis
             },
             body: JSON.stringify(filters)
         });
+
+        if (!response.ok) {
+            throw new Error(`Boolean request failed with status ${response.status}`);
+        }
 
         const data = await response.json();
         const articles: ArticleResult[] = data as ArticleResult[];

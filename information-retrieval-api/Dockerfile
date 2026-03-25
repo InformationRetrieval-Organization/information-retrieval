@@ -30,4 +30,4 @@ ENV PATH="/code/.venv/bin:$PATH"
 
 EXPOSE 3100
 
-CMD ["/bin/bash", "-c", "prisma generate; gunicorn main:app -c gunicorn.conf.py"]
+CMD ["/bin/bash", "-c", "gunicorn main:app -c gunicorn.conf.py"]

@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 import requests
 import os
 import time as t
@@ -13,6 +14,8 @@ from config import (
     GROUND_DATASET_END_DATE,
     GNEWS_FILE_PATH,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def get_gnews_data(
@@ -47,9 +50,9 @@ def crawl_gnews_data() -> None:
     Crawl news articles from GNews API and save them to a CSV file.
     """
 
-    print("Crawling GNews data...")
-    print(f"Begin date: {GROUND_DATASET_START_DATE}")
-    print(f"End date: {GROUND_DATASET_END_DATE}")
+    logger.info("Crawling GNews data...")
+    logger.info("Begin date: %s", GROUND_DATASET_START_DATE)
+    logger.info("End date: %s", GROUND_DATASET_END_DATE)
 
     if os.path.exists(GNEWS_FILE_PATH):
         os.remove(GNEWS_FILE_PATH)
@@ -86,7 +89,7 @@ def crawl_gnews_data() -> None:
         # Pause for 0.2 second to avoid exceeding the rate limit of 6 requests per second
         t.sleep(0.2)
 
-    print(f"Total articles retrieved: {total_articles}")
+    logger.info("Total articles retrieved: %s", total_articles)
 
 
 if __name__ == "__main__":

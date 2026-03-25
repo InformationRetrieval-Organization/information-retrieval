@@ -1,4 +1,5 @@
 # NOTE: not used in the final project, but kept for reference
+import logging
 import os
 from datetime import date, datetime
 import requests
@@ -23,15 +24,17 @@ from config import (
     NYT_FILE_PATH,
 )
 
+logger = logging.getLogger(__name__)
+
 
 async def crawl_nyt_data() -> None:
     """
     Crawl news articles from New York Times and save them to a CSV file.
     """
 
-    print("Crawling New York Times data...")
-    print(f"Begin date: {GROUND_DATASET_START_DATE}")
-    print(f"End date: {GROUND_DATASET_END_DATE}")
+    logger.info("Crawling New York Times data...")
+    logger.info("Begin date: %s", GROUND_DATASET_START_DATE)
+    logger.info("End date: %s", GROUND_DATASET_END_DATE)
 
     if os.path.exists(NYT_FILE_PATH):
         os.remove(NYT_FILE_PATH)
@@ -72,7 +75,7 @@ async def crawl_nyt_data() -> None:
         total_articles += len(data)
         page += 1
 
-    print(f"Total articles retrieved: {total_articles}")
+    logger.info("Total articles retrieved: %s", total_articles)
     driver.quit()
 
 
@@ -113,8 +116,9 @@ def get_full_article(url, driver):
             EC.presence_of_element_located((By.TAG_NAME, "articleBody"))
         )
     except TimeoutException:
-        print(
-            f"TimeoutException: Element with tag name 'articleBody' not found on {url}"
+        logger.warning(
+            "TimeoutException: Element with tag name 'articleBody' not found on %s",
+            url,
         )
         return None
 

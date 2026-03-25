@@ -1,3 +1,4 @@
+import logging
 from sklearn.feature_extraction.text import TfidfVectorizer
 from db.processed_posts import get_all_processed_posts 
 from information_retrieval.linked_list import LinkedList
@@ -7,11 +8,13 @@ import os
 from config import INVERTED_INDEX_FILE_PATH
 from config import FASTAPI_ENV
 
+logger = logging.getLogger(__name__)
+
 async def build_boolean_model():
     """
     Build the Boolean Model
     """
-    print("Building Boolean Model")
+    logger.info("Building Boolean Model")
     delete_old_csv() # Delete the old csv file if it exists
     
     # Get all posts content
@@ -32,10 +35,10 @@ async def build_boolean_model():
     
     # Create a DataFrame to store the search results
     create_csv()
-    print("Boolean Model Built")
+    logger.info("Boolean Model Built")
     
 def search_boolean_model(query):
-    print("Searching Boolean Model")
+    logger.info("Searching Boolean Model")
     id_set = set(information_retrieval.globals._all_doc_ids)
 
     # First sort tokens by frequency
@@ -53,7 +56,7 @@ def search_boolean_model(query):
         elif entry[0] == "NOT":
             id_set = _not_processing(entry[1], id_set)
             
-    print("Boolean Model Searched")
+    logger.info("Boolean Model Searched")
     return list(id_set)
 
 def _and_processing(word, id_set):

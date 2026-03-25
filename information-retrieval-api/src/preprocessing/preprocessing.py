@@ -1,21 +1,23 @@
+import logging
 import re
 from typing import Dict, List, Set, Tuple
 import nltk
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
 from db.processed_posts import create_many_processed_posts, get_all_processed_posts
 from db.posts import get_all_posts
 import information_retrieval.globals
 from datetime import datetime
 from config import MAX_DATA_COEFFICIENT
-from prisma import models
+from db.models import Post, ProcessedPost
+
+logger = logging.getLogger(__name__)
 
 
 async def preprocess_documents():
     """
     Preprocesses the documents in the database and returns a list of tokens.
     """
-    print("Start Preprocessing")
+    logger.info("Start Preprocessing")
 
     download_nltk_resources()
 
@@ -25,26 +27,25 @@ async def preprocess_documents():
 
     if not processed_posts:
         # Preprocess the posts
-        print("no prepocessed posts in database, start preprocessing")
+        logger.info("no prepocessed posts in database, start preprocessing")
         processed_posts, list_of_tokens = await preprocess_and_insert_posts(posts)
     else:
         # already preprocessed
-        print("found preprocessed posts in database")
+        logger.info("found preprocessed posts in database")
         list_of_tokens = await calculate_date_coefficients_and_vocabulary(
             processed_posts, posts
         )
 
     information_retrieval.globals._vocabulary = list_of_tokens
 
-    print(str(len(processed_posts)) + " posts came trough the preprocessing")
-    print("Length of Vocabulary: " + str(len(list_of_tokens)))
-    print("Preprocessing completed")
+    logger.info("%s posts came trough the preprocessing", len(processed_posts))
+    logger.info("Length of Vocabulary: %s", len(list_of_tokens))
+    logger.info("Preprocessing completed")
     
 def download_nltk_resources():
     """
     Download the necessary NLTK resources.
     """
-    nltk.download("punkt")
     nltk.download("wordnet")
     nltk.download("stopwords")
     nltk.download("words")
@@ -62,7 +63,7 @@ def handle_tokens(term_freq_map: Dict[str, int], tokens: List[str]) -> List[str]
 
     return tokens
 
-async def preprocess_and_insert_posts(posts: List[models.Post]) -> Tuple[List[models.Processed_Post], List[str]]:
+async def preprocess_and_insert_posts(posts: List[Post]) -> Tuple[List[ProcessedPost], List[str]]:
     """
     Preprocesses the posts and inserts them into the database.
     """
@@ -96,14 +97,14 @@ async def preprocess_and_insert_posts(posts: List[models.Post]) -> Tuple[List[mo
     list_of_tokens = handle_tokens(term_freq_map, list_of_tokens)
 
     # database
-    processed_posts_data = [post.dict() for post in processed_posts] # convert from List[Processed_Post] to List[Dict]
+    processed_posts_data = [post.model_dump() for post in processed_posts] # convert from List[ProcessedPost] to List[Dict]
     await create_many_processed_posts(processed_posts_data) # Insert the processed posts into the database
 
     return processed_posts, list_of_tokens
 
 
 async def calculate_date_coefficients_and_vocabulary(
-    processed_posts: List[models.Processed_Post], posts: List[models.Post]
+    processed_posts: List[ProcessedPost], posts: List[Post]
 ) -> List[str]:
     """
     Calculates the date coefficients and vocabulary for the processed posts.
@@ -138,8 +139,8 @@ async def calculate_date_coefficients_and_vocabulary(
 
 
 def preprocess_post(
-    post: models.Post, english_words: Set[str]
-) -> Tuple[models.Processed_Post, List[str]]:
+    post: Post, english_words: Set[str]
+) -> Tuple[ProcessedPost, List[str]]:
     """
     Preprocess a post.
     """
@@ -160,7 +161,7 @@ def preprocess_post(
     )
 
     # Tokenize the document
-    tokens = word_tokenize(content)
+    tokens = nltk.wordpunct_tokenize(content)
 
     # Remove stopwords
     stop_words = set(stopwords.words("english"))
@@ -171,7 +172,7 @@ def preprocess_post(
     tokens = [lemmatizer.lemmatize(token) for token in tokens]
 
     # Create the processed post
-    processed_post = models.Processed_Post(id=post.id, content=" ".join(tokens))
+    processed_post = ProcessedPost(id=post.id, content=" ".join(tokens))
 
     return processed_post, tokens
 

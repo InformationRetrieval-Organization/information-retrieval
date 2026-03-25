@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from information_retrieval.vector_space_model import build_vector_space_model, execute_singualar_value_decomposition
@@ -6,6 +7,7 @@ from preprocessing.preprocessing import preprocess_documents
 from api.vector_space_api import router as vector_space_router
 from api.boolean_api import router as boolean_router
 from db.helper import init_database
+from db.session import init_db_schema
 from information_retrieval.globals import init_globals
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -14,12 +16,15 @@ from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
 import uvicorn
 
+logger = logging.getLogger(__name__)
+
 limiter = Limiter(key_func=get_remote_address, default_limits=["30/minute"])
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("FastAPI app started.")
+    logger.info("FastAPI app started.")
 
+    await init_db_schema()
     await init_database()
 
     init_globals()

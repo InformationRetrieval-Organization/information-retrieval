@@ -1,4 +1,5 @@
 from datetime import datetime, time
+import logging
 import os
 import sys
 
@@ -6,6 +7,10 @@ import sys
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
+
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # API Keys
 NYT_API_KEY = os.getenv("NYT_API_KEY")
@@ -40,7 +45,7 @@ try:
             datetime.strptime(end_date_str, "%Y-%m-%d").date(), time.max
         )
 except ValueError:
-    print("Please provide valid dates in the .env file.")
+    logger.warning("Please provide valid dates in the .env file.")
 
 # Flask Environment
 FASTAPI_ENV = os.getenv("FASTAPI_ENV")

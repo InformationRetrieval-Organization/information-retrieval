@@ -1,9 +1,12 @@
+import logging
 import math
 from typing import Any, List
 from db.processed_posts import get_all_processed_posts
 import information_retrieval.globals
 import information_retrieval.linked_list
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 async def search_vector_space_model(query: List[str]) -> List[int]: 
     """
@@ -23,10 +26,16 @@ async def search_vector_space_model(query: List[str]) -> List[int]:
         # Calculate the inverse document frequency (IDF) for each term
         inverse_document_frequency[term] = compute_inverse_document_frequency(total_documents, df)
  
+    if not information_retrieval.globals._document_svd_matrix:
+        return []
+
     # creating the tfidf-query vector
     tfidf_vector = [compute_tf_idf_weighting(compute_sublinear_tf_scaling(query.count(term)), inverse_document_frequency[term]) for term in information_retrieval.globals._vocabulary]
 
     flat_transposed_query_vector = calculate_dimension_reduced_query(tfidf_vector)
+
+    if flat_transposed_query_vector.size == 0:
+        return []
 
     
     # Map each document by id to the corressponding cosinec similiarity
@@ -38,6 +47,8 @@ async def search_vector_space_model(query: List[str]) -> List[int]:
         # Calculate the norms for the Queryvector and the Documentvector
         magnitude_query = np.linalg.norm(flat_transposed_query_vector)
         magnitude_entry = np.linalg.norm(vector)
+        if magnitude_query == 0 or magnitude_entry == 0:
+            continue
         # Calculating the Cosine similiarity
         cosine_similarity = dot_product / (magnitude_query * magnitude_entry)
         # multiply cosine similarity with the date coefficient
@@ -58,7 +69,7 @@ async def build_vector_space_model():
     """
     vocabulary: List[str] = information_retrieval.globals._vocabulary
     
-    print("Building Vector Space Model")
+    logger.info("Building Vector Space Model")
         
     posts = await get_all_processed_posts()
     posts = [(post.id, post.content) for post in posts]
@@ -82,7 +93,7 @@ async def build_vector_space_model():
         information_retrieval.globals._document_id_vector_map[post[0]] = tfidf_vector 
     
     
-    print("Vector Space Model Built")
+    logger.info("Vector Space Model Built")
     return None
 
 def compute_inverse_document_frequency(N : int, df: int) -> float:
@@ -100,14 +111,13 @@ def calculate_dimension_reduced_query(tfidf_query_vector: List[float]) -> np.nda
     """
     Calculate the dimension reduced query with the following formula: q = q^T * U_k * S_k^-1
     """
+    if len(information_retrieval.globals._S_reduced) == 0 or len(information_retrieval.globals._U_reduced) == 0:
+        return np.array([])
+
      # transpose tfidf vector to calculate the new dimensional reduced query vector
     square_s_reduced = np.diag(information_retrieval.globals._S_reduced)
-    # Check if the matrix is invertible
-    if np.linalg.det(square_s_reduced) == 0:
-        print("The matrix is singular and cannot be inverted.")
-    else:
-        # Calculate the inverse
-        s_k_inv = np.linalg.inv(square_s_reduced)
+    # Use pseudo-inverse to handle singular matrices safely.
+    s_k_inv = np.linalg.pinv(square_s_reduced)
     
     # convert the tfidf_vector to a numpy matrix shape = (k,1)
     numpy_matrix_query = np.matrix(tfidf_query_vector)
@@ -127,10 +137,18 @@ async def execute_singualar_value_decomposition():
     """
     Singular Value Decomposition
     """
-    print("Start Executing SVD")
+    logger.info("Start Executing SVD")
     documents_vector_list = list(information_retrieval.globals._document_id_vector_map.items()) # get the list of documents and their vectors
     vector_list = [vector for _, vector in documents_vector_list] # get the list of vectors
     documentids_list = [doc_id for doc_id, _ in documents_vector_list] # get the list of document ids
+    if not vector_list:
+        information_retrieval.globals._U_reduced = np.array([])
+        information_retrieval.globals._S_reduced = np.array([])
+        information_retrieval.globals._V_reduced = np.array([])
+        information_retrieval.globals._document_svd_matrix = {}
+        logger.info("SVD skipped: no vectors available")
+        return None
+
     original_matrix = np.matrix(vector_list) # create a matrix from the list of vectors
     original_matrix = original_matrix.transpose() # transpose the matrix to get the word to document matrix
     
@@ -139,11 +157,9 @@ async def execute_singualar_value_decomposition():
     # get the number of values that represent 90% of the sum
     sum_of_values = sum(S)    
     threshold = sum_of_values * 0.9
-    current_sum = 0
-    for k, value in enumerate(S):
-        current_sum += value
-        if current_sum > threshold: # if the sum of the values is greater than the threshold, break
-            break
+    cumulative_values = np.cumsum(S)
+    k = int(np.searchsorted(cumulative_values, threshold, side="left") + 1)
+    k = max(1, min(k, len(S)))
             
     # reduce the dimensionality of the matrix
     information_retrieval.globals._U_reduced = U[:, :k]
@@ -157,4 +173,4 @@ async def execute_singualar_value_decomposition():
         vector = np.ravel(information_retrieval.globals._V_reduced[i,:]) # Get the ith row of the V_reduced matrix and convert it to a 1D array
         information_retrieval.globals._document_svd_matrix[doc_id] = vector 
         i += 1
-    print("SVD executed")
+    logger.info("SVD executed")

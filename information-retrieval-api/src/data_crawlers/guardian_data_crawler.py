@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 import requests
 import asyncio
 import os
@@ -29,6 +30,8 @@ QUERY_PARAMS = {
     "page-size": 10,  # this is the maximum
     "q": "korea",
 }
+
+logger = logging.getLogger(__name__)
 
 
 def get_guardian_data(page: int):
@@ -70,7 +73,7 @@ def get_full_article(url):
 
     response = requests.get(url)
     if response.status_code != 200:
-        print(f"Failed to get page: {url}")
+        logger.warning("Failed to get page: %s", url)
         return None
 
     soup = BeautifulSoup(response.text, "html.parser")
@@ -106,9 +109,9 @@ async def crawl_guardian_data() -> None:
 
     start_time = time.time()
 
-    print("Crawling The Guardian data...")
-    print(f"Begin date: {GROUND_DATASET_START_DATE}")
-    print(f"End date: {GROUND_DATASET_END_DATE}")
+    logger.info("Crawling The Guardian data...")
+    logger.info("Begin date: %s", GROUND_DATASET_START_DATE)
+    logger.info("End date: %s", GROUND_DATASET_END_DATE)
 
     if os.path.exists(GUARDIAN_FILE_PATH):
         os.remove(GUARDIAN_FILE_PATH)
@@ -116,7 +119,7 @@ async def crawl_guardian_data() -> None:
     # synchronous call to get the first page
     articles, total_pages = fetch_page_data(1)
     if total_pages == 0:
-        print("Failed to get the total number of pages")
+        logger.warning("Failed to get the total number of pages")
         return
 
     total_articles = len(articles)
@@ -143,8 +146,8 @@ async def crawl_guardian_data() -> None:
     end_time = time.time()
     elapsed_time = end_time - start_time
 
-    print(f"Total articles retrieved: {total_articles}")
-    print(f"Elapsed time: {elapsed_time} seconds")
+    logger.info("Total articles retrieved: %s", total_articles)
+    logger.info("Elapsed time: %s seconds", elapsed_time)
 
 
 if __name__ == "__main__":
