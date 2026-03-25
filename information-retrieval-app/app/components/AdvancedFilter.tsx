@@ -1,4 +1,16 @@
-import { Button, Accordion, AccordionItem, Select, SelectItem, Input } from "@heroui/react";
+import {
+    Button,
+    Accordion,
+    AccordionItem,
+    AccordionHeading,
+    AccordionTrigger,
+    AccordionPanel,
+    AccordionBody,
+    Select,
+    ListBox,
+    ListBoxItem,
+    Input,
+} from "@heroui/react";
 import { MinusIcon, PlusIcon } from "@/components/icons";
 
 interface AdvancedFilterProps {
@@ -25,59 +37,69 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ filters, setFilters }) 
         setFilters(newFilters);
     };
 
-    const handleSelectionChange = (
-        e: React.ChangeEvent<HTMLSelectElement>,
-        index: number
-    ) => {
-        updateFilter(index, e.target.value, filters[index].value);
-    };
-
     return (
-        <Accordion variant="light">
-            <AccordionItem key="1" aria-label="Advanced Filter" title="Advanced Filter">
-                {filters.map((filter, index) => (
-                    <div key={index} className="flex items-center gap-2 mt-3">
-                        <Select
-                            className="w-40"
-                            selectedKeys={[filter.operator]}
-                            onChange={(e) => handleSelectionChange(e, index)}
-                            aria-label="Operator"
-                        >
-                            {operators.map((operator) => (
-                                <SelectItem key={operator}>
-                                    {operator}
-                                </SelectItem>
-                            ))}
-                        </Select>
+        <Accordion variant="default">
+            <AccordionItem key="1" id="advanced-filter">
+                <AccordionHeading>
+                    <AccordionTrigger>Advanced Filter</AccordionTrigger>
+                </AccordionHeading>
 
-                        <Input
-                            value={filter.value}
-                            onChange={(e) =>
-                                updateFilter(index, filter.operator, e.target.value)
-                            }
-                            placeholder="search term"
-                            aria-label="Search term"
-                        />
+                <AccordionPanel>
+                    <AccordionBody>
+                        {filters.map((filter, index) => (
+                            <div key={index} className="flex items-center gap-2 mt-3">
+                                <Select
+                                    className="w-40"
+                                    value={filter.operator}
+                                    onChange={(key) =>
+                                        updateFilter(index, String(key ?? operators[0]), filters[index].value)
+                                    }
+                                    aria-label="Operator"
+                                >
+                                    <Select.Trigger>
+                                        <Select.Value />
+                                        <Select.Indicator />
+                                    </Select.Trigger>
 
-                        <Button
-                            isIconOnly
-                            color="primary"
-                            variant="flat"
-                            onClick={() => addFilter()}
-                        >
-                            <PlusIcon />
-                        </Button>
+                                    <Select.Popover>
+                                        <ListBox aria-label="Operator options">
+                                            {operators.map((operator) => (
+                                                <ListBoxItem key={operator} id={operator} textValue={operator}>
+                                                    {operator}
+                                                </ListBoxItem>
+                                            ))}
+                                        </ListBox>
+                                    </Select.Popover>
+                                </Select>
 
-                        <Button
-                            isIconOnly
-                            color="primary"
-                            variant="flat"
-                            onClick={() => removeFilter(index)}
-                        >
-                            <MinusIcon />
-                        </Button>
-                    </div>
-                ))}
+                                <Input
+                                    value={filter.value}
+                                    onChange={(e) =>
+                                        updateFilter(index, filter.operator, e.target.value)
+                                    }
+                                    placeholder="search term"
+                                    aria-label="Search term"
+                                />
+
+                                <Button
+                                    isIconOnly
+                                    variant="secondary"
+                                    onClick={() => addFilter()}
+                                >
+                                    <PlusIcon />
+                                </Button>
+
+                                <Button
+                                    isIconOnly
+                                    variant="secondary"
+                                    onClick={() => removeFilter(index)}
+                                >
+                                    <MinusIcon />
+                                </Button>
+                            </div>
+                        ))}
+                    </AccordionBody>
+                </AccordionPanel>
             </AccordionItem>
         </Accordion>
     );

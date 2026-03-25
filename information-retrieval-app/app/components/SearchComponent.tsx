@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Button, Divider, Input } from "@heroui/react";
+import { Button, Separator, Input, Spinner } from "@heroui/react";
 import { SearchIcon } from "../../components/icons";
 import ResultsList from "./ResultsList";
 import AdvancedFilter from "./AdvancedFilter";
@@ -43,18 +43,17 @@ const SearchComponent = ({ searchType }: { searchType: string }) => {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="search term"
-                    size="md"
                     type="search"
                 />
 
-                <Button isIconOnly color="primary" variant="solid" size="lg" onClick={fetchData} isLoading={isLoading}>
-                    <SearchIcon size={18} />
+                <Button isIconOnly variant="primary" size="lg" onClick={fetchData} isDisabled={isLoading}>
+                    {isLoading ? <Spinner size="sm" /> : <SearchIcon size={18} />}
                 </Button>
             </div>
 
             {searchType === 'boolean' && <AdvancedFilter filters={filters} setFilters={setFilters} />}
 
-            <Divider />
+            <Separator />
 
             <ResultsList results={results} />
         </section>
