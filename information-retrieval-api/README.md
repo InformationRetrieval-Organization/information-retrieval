@@ -30,7 +30,7 @@ Database tables are created automatically on API startup.
 
 ### Run application
 ```bash
-uv run gunicorn main:app -c gunicorn.conf.py
+uv run uvicorn main:app --app-dir src --host 0.0.0.0 --port 3100
 ```
 
 ### optional: pgadmin

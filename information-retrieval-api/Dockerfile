@@ -30,4 +30,4 @@ ENV PATH="/code/.venv/bin:$PATH"
 
 EXPOSE 3100
 
-CMD ["/bin/bash", "-c", "gunicorn main:app -c gunicorn.conf.py"]
+CMD ["uv", "run", "uvicorn", "main:app", "--app-dir", "src", "--host", "0.0.0.0", "--port", "3100"]
