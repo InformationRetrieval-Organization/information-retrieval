@@ -40,6 +40,11 @@ uv run uvicorn main:app --app-dir src --host 0.0.0.0 --port 3100
 ### Build preprocessing data manually (Notebook)
 - Use [information-retrieval-api/notebooks/preprocess_and_build_models.ipynb](information-retrieval-api/notebooks/preprocess_and_build_models.ipynb) to prepare data and build models before deployment.
 
+### Evaluate retrieval models (Notebook)
+- Use [information-retrieval-api/notebooks/evaluate_models.ipynb](information-retrieval-api/notebooks/evaluate_models.ipynb) for recall/precision/F1 and temporal relevance evaluation.
+- Start the API first (default endpoint expected by notebook: `http://127.0.0.1:8000`).
+- If needed, override API endpoint with environment variable `IR_API_BASE_URL`.
+
 ### optional: pgadmin
 Open `http://localhost:5050/`
 1) Email: root@root.com
