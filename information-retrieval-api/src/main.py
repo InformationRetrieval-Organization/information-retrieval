@@ -33,7 +33,8 @@ async def lifespan(app: FastAPI):
     await init_db_schema()
     await init_database()
     init_globals()
-    logger.info("Skipping preprocessing at startup. Run the local notebook pipeline before starting the API.")
+
+    await preprocess_documents()
 
     await asyncio.gather(
         build_boolean_model(),
