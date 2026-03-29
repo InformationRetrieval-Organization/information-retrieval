@@ -1,12 +1,23 @@
 {
-    "cSpell.enabled": false,
-    "python.pythonPath": ".venv/bin/python",
-    "typescript.tsdk": "node_modules/typescript/lib",
-    "cSpell.enabled": false,
-    "appService.zipIgnorePattern": [
-      "node_modules{,/**}",
-      ".vscode{,/**}"
-    ],
-    "appService.defaultWebAppToDeploy": "/subscriptions/ea98b20c-17ef-464f-a13b-e2a2e6583710/resourceGroups/prod-gerwe-informationretrieval/providers/Microsoft.Web/sites/informationretrieval-prod-app",
-    "appService.deploySubpath": "."
+  "cSpell.enabled": false,
+  "python.defaultInterpreterPath": "${workspaceFolder}/information-retrieval-api/.venv/bin/python",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/information-retrieval-api/src"
+  ],
+  "terminal.integrated.env.linux": {
+    "PYTHONPATH": "${workspaceFolder}/information-retrieval-api/src"
+  },
+  "terminal.integrated.env.osx": {
+    "PYTHONPATH": "${workspaceFolder}/information-retrieval-api/src"
+  },
+  "terminal.integrated.env.windows": {
+    "PYTHONPATH": "${workspaceFolder}/information-retrieval-api/src"
+  },
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "appService.zipIgnorePattern": [
+    "node_modules{,/**}",
+    ".vscode{,/**}"
+  ],
+  "appService.defaultWebAppToDeploy": "/subscriptions/ea98b20c-17ef-464f-a13b-e2a2e6583710/resourceGroups/prod-gerwe-informationretrieval/providers/Microsoft.Web/sites/informationretrieval-prod-app",
+  "appService.deploySubpath": "."
 }
